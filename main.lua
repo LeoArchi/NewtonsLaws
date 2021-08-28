@@ -56,12 +56,13 @@ function love.update(dt)
   if love.keyboard.isDown("space") then
     -- On calcule le vecteur vitesse par rapport à l'accélération
     local vectorSpeed = Vector:new(player.acceleration,player.o)
-
     -- Le nouveau vecteur vitesse du joueur correspond à l'addition entre son ancien vecteur vitesse et le vecteur vitesse resultant de son accélération
     player.vector = Vector:add(player.vector, vectorSpeed)
   end
 
-  -- Tester la présence d'une accélération du à un potentiel champ gravitationnel
+  -- Tester la présence d'une accélération du à un potentiel champ gravitationnel, comme si dessus
+  -- A la différence de si dessus, calculer systématiquement la gravité lorsque l'on se trouve dans la zone d'influance gravitationelle
+  -- Si lorsque l'on applique la gravitation et que l'on dépasse la colition de la planète, alors recalculer les composantes de sorte que l'on reste à la surface de l'astre
   -- TODO
 
   -- Calculer le déplacement du joueur
