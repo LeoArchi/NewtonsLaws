@@ -1,5 +1,6 @@
 Trajectory  = require "trajectory"
 Vector      = require "vector"
+Gravity     = require "gravity"
 
 Player = {
 
@@ -62,17 +63,22 @@ update = function(dt)
     player.vector = Vector.add(player.vector, vectorSpeed)
   end
 
-  -- Tester la présence d'une accélération du à un potentiel champ gravitationnel, comme si dessus
-  -- A la différence de si dessus, calculer systématiquement la gravité lorsque l'on se trouve dans la zone d'influance gravitationelle
-  -- Si lorsque l'on applique la gravitation et que l'on dépasse la colition de la planète, alors recalculer les composantes de sorte que l'on reste à la surface de l'astre
-  -- TODO
+  -- Tester la présence d'une accélération du à un potentiel champ gravitationnel
+  local gravityVector = Gravity.getGravity(soleil, player.x, player.y)
+  if gravityVector.norme < 0 then
+
+    -- Le nouveau vecteur vitesse du joueur correspond à l'addition entre son ancien vecteur vitesse et le vecteur vitesse resultant de son accélération
+    player.vector = Vector.add(player.vector, gravityVector)
+
+    -- TODO : Si lorsque l'on applique la gravitation et que l'on dépasse la colition de la planète, alors recalculer les composantes de sorte que l'on reste à la surface de l'astre
+  end
 
   -- Calculer le déplacement du joueur
   player.x = player.x + player.vector.normeX*dt
   player.y = player.y - player.vector.normeY*dt
 
   -- Si il s'est écoulé plus de 0.3s depuis le dernier point sauvegardé, alors réinitialiser le temps et sauvegarder la position actuelle
-  if player.trajectory.tempsEcoule > 0.3 then
+  if player.trajectory.tempsEcoule > 0.1 then
     player.trajectory.tempsEcoule = 0
     table.insert(player.trajectory.passee, {x = player.x , y = player.y})
   end

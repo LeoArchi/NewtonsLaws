@@ -1,3 +1,6 @@
+Gravity = require "gravity"
+Vector = require "vector"
+
 Trajectory = {
 
 predict = function(x, y, vector, nbPoints)
@@ -9,10 +12,16 @@ predict = function(x, y, vector, nbPoints)
   local virtualY = y
 
   for index=0, nbPoints, 1 do
-    -- Tester la présence d'une accélération du à un potentiel champ gravitationnel, comme si dessus
-    -- A la différence de si dessus, calculer systématiquement la gravité lorsque l'on se trouve dans la zone d'influance gravitationelle
-    -- Si lorsque l'on applique la gravitation et que l'on dépasse la colition de la planète, alors recalculer les composantes de sorte que l'on reste à la surface de l'astre
-    -- TODO (LA MEME CHOSE QUE LORS DU CALCUL REEL, D'OU L'INTERET D'UNE FONCTION)
+
+    -- Tester la présence d'une accélération du à un potentiel champ gravitationnel
+    local gravityVector = Gravity.getGravity(soleil, virtualX, virtualY)
+    if gravityVector.norme < 0 then
+
+      -- Le nouveau vecteur vitesse du joueur correspond à l'addition entre son ancien vecteur vitesse et le vecteur vitesse resultant de son accélération
+      vector = Vector.add(vector, gravityVector)
+
+      -- TODO : Si lorsque l'on applique la gravitation et que l'on dépasse la colition de la planète, alors recalculer les composantes de sorte que l'on reste à la surface de l'astre
+    end
 
     -- Calculer virtuellement le déplacement du joueur
     virtualX = virtualX + vector.normeX*virtualDt
