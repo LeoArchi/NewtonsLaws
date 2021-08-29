@@ -19,7 +19,36 @@ function love.load()
   player.trajectory = {}
   player.trajectory.tempsEcoule = 0
   player.trajectory.points = {}
+  player.trajectory.prediction = {}
 end
+
+-- Bêta du système de prévision de trajectoire
+function previsionTrajectoire(nbPoints)
+
+  local prediction = {}
+  local virtualDt = 0.3
+
+  local virtualPlayerX = player.x
+  local virtualPlayerY = player.y
+
+  for index=0, nbPoints, 1 do
+    -- Tester la présence d'une accélération du à un potentiel champ gravitationnel, comme si dessus
+    -- A la différence de si dessus, calculer systématiquement la gravité lorsque l'on se trouve dans la zone d'influance gravitationelle
+    -- Si lorsque l'on applique la gravitation et que l'on dépasse la colition de la planète, alors recalculer les composantes de sorte que l'on reste à la surface de l'astre
+    -- TODO (LA MEME CHOSE QUE LORS DU CALCUL REEL, D'OU L'INTERET D'UNE FONCTION)
+
+    -- Calculer virtuellement le déplacement du joueur
+    virtualPlayerX = virtualPlayerX + player.vector.normeX*virtualDt
+    virtualPlayerY = virtualPlayerY - player.vector.normeY*virtualDt
+
+    table.insert(prediction, {playerX = virtualPlayerX , playerY = virtualPlayerY})
+
+  end
+
+  return prediction
+
+end
+
 
 function love.update(dt)
 
@@ -31,6 +60,9 @@ function love.update(dt)
 
   -- Calcul du temps écoulé pour la sauvegarde de la trajectoire du joueur
   player.trajectory.tempsEcoule = player.trajectory.tempsEcoule + dt
+
+  -- Prédiction de la trajectoire du joueur
+  player.trajectory.prediction = previsionTrajectoire(50)
 
   -- Calculer l'orientation du joueur
   if love.keyboard.isDown("left") then
@@ -69,7 +101,7 @@ function love.update(dt)
   player.x = player.x + player.vector.normeX*dt
   player.y = player.y - player.vector.normeY*dt
 
-  -- Si il s'est écoulé plus de 1s depuis le dernier point sauvegardé, alors réinitialiser le temps et sauvegarder la position actuelle
+  -- Si il s'est écoulé plus de 0.3s depuis le dernier point sauvegardé, alors réinitialiser le temps et sauvegarder la position actuelle
   if player.trajectory.tempsEcoule > 0.3 then
     player.trajectory.tempsEcoule = 0
     table.insert(player.trajectory.points, {playerX = player.x , playerY = player.y})
@@ -100,13 +132,23 @@ function love.draw()
     love.graphics.line(0, grad, love.graphics.getWidth(), grad)
   end
 
-  -- TRAJECTOIRE DU JOUEUR
+  -- TRAJECTOIRE PASEE DU JOUEUR
   love.graphics.setColor(0, 0, 1)
   for i, v in ipairs(player.trajectory.points) do
     if i ~= 1 then
       local last = player.trajectory.points[i-1]
       local current = player.trajectory.points[i]
       love.graphics.line(last.playerX, last.playerY, current.playerX, current.playerY)
+    end
+  end
+
+  -- TRAJECTOIRE PREDITE DU JOUEUR
+  love.graphics.setColor(1, 1, 1)
+  for i, v in ipairs(player.trajectory.prediction) do
+    if i ~= 1 then
+      local last = player.trajectory.prediction[i-1]
+      local current = player.trajectory.prediction[i]
+      --love.graphics.line(last.playerX, last.playerY, current.playerX, current.playerY)
     end
   end
 
