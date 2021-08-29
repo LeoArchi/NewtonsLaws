@@ -1,111 +1,22 @@
-require "vector"
+Vector  = require "vector"
+Player  = require "player"
 
 function love.load()
 
-  va = 0.8 -- vitesse angulaire de la variation de l'orientation
+  time = 0
+  isLoading = true
 
-  tempsPasse = 0
-
-  player = {}
-  player.x =  love.graphics.getWidth()/2 -- La position en x du joueur
-  player.y =  love.graphics.getHeight()/2 -- La position en y du joueur
-  player.o = 0 -- L'orientation du joueur en radians
-  player.oX = player.x + 20
-  player.oy = player.y
-  player.radius = 20
-  player.vector = Vector:new(0,0) -- Le vecteur vitesse du joueur, exprimé par l'orientation de son mouvement en radians et sa vitesse en px par seconde
-  player.acceleration = 1 -- L'accélération possible par le joueur lorsque les moteurs sont allumés, en px par seconde par seconde
-
-  player.trajectory = {}
-  player.trajectory.tempsEcoule = 0
-  player.trajectory.points = {}
-  player.trajectory.prediction = {}
-end
-
--- Bêta du système de prévision de trajectoire
-function previsionTrajectoire(nbPoints)
-
-  local prediction = {}
-  local virtualDt = 0.3
-
-  local virtualPlayerX = player.x
-  local virtualPlayerY = player.y
-
-  for index=0, nbPoints, 1 do
-    -- Tester la présence d'une accélération du à un potentiel champ gravitationnel, comme si dessus
-    -- A la différence de si dessus, calculer systématiquement la gravité lorsque l'on se trouve dans la zone d'influance gravitationelle
-    -- Si lorsque l'on applique la gravitation et que l'on dépasse la colition de la planète, alors recalculer les composantes de sorte que l'on reste à la surface de l'astre
-    -- TODO (LA MEME CHOSE QUE LORS DU CALCUL REEL, D'OU L'INTERET D'UNE FONCTION)
-
-    -- Calculer virtuellement le déplacement du joueur
-    virtualPlayerX = virtualPlayerX + player.vector.normeX*virtualDt
-    virtualPlayerY = virtualPlayerY - player.vector.normeY*virtualDt
-
-    table.insert(prediction, {playerX = virtualPlayerX , playerY = virtualPlayerY})
-
-  end
-
-  return prediction
+  vector = Vector.new(0,0)
+  player = Player.new(50, love.graphics.getHeight()/2, 20, vector)
 
 end
-
 
 function love.update(dt)
 
-  -- Calcul du temps passé
-  tempsPasse = tempsPasse + dt
+  time = time + dt  -- Calcul du temps passé depuis le démarage du programme
+  fps = 1/dt        -- Calcul des FPS
 
-  -- Calcul des FPS
-  fps = 1/dt
-
-  -- Calcul du temps écoulé pour la sauvegarde de la trajectoire du joueur
-  player.trajectory.tempsEcoule = player.trajectory.tempsEcoule + dt
-
-  -- Prédiction de la trajectoire du joueur
-  player.trajectory.prediction = previsionTrajectoire(50)
-
-  -- Calculer l'orientation du joueur
-  if love.keyboard.isDown("left") then
-    -- On augmente l'angle du joueur de n radians par seconde
-    if player.o + va*dt >= math.pi*2 then
-      player.o = player.o + va*dt - math.pi*2
-    else
-      player.o = player.o + va*dt
-    end
-  elseif love.keyboard.isDown("right") then
-    -- On diminue l'angle du joueur de n radians par seconde
-    if player.o + va*dt <= 0 then
-      player.o = player.o - va*dt + math.pi*2
-    else
-      player.o = player.o - va*dt
-    end
-  end
-
-  player.oX = player.x + math.cos(player.o) * 20
-  player.oY = player.y - math.sin(player.o) * 20
-
-  -- Recalculer la vitesse du joueur lorque l'on accélère
-  if love.keyboard.isDown("space") then
-    -- On calcule le vecteur vitesse par rapport à l'accélération
-    local vectorSpeed = Vector:new(player.acceleration,player.o)
-    -- Le nouveau vecteur vitesse du joueur correspond à l'addition entre son ancien vecteur vitesse et le vecteur vitesse resultant de son accélération
-    player.vector = Vector:add(player.vector, vectorSpeed)
-  end
-
-  -- Tester la présence d'une accélération du à un potentiel champ gravitationnel, comme si dessus
-  -- A la différence de si dessus, calculer systématiquement la gravité lorsque l'on se trouve dans la zone d'influance gravitationelle
-  -- Si lorsque l'on applique la gravitation et que l'on dépasse la colition de la planète, alors recalculer les composantes de sorte que l'on reste à la surface de l'astre
-  -- TODO
-
-  -- Calculer le déplacement du joueur
-  player.x = player.x + player.vector.normeX*dt
-  player.y = player.y - player.vector.normeY*dt
-
-  -- Si il s'est écoulé plus de 0.3s depuis le dernier point sauvegardé, alors réinitialiser le temps et sauvegarder la position actuelle
-  if player.trajectory.tempsEcoule > 0.3 then
-    player.trajectory.tempsEcoule = 0
-    table.insert(player.trajectory.points, {playerX = player.x , playerY = player.y})
-  end
+  Player.update(dt) -- Mise à jour du joueur
 
 end
 
@@ -120,9 +31,9 @@ function love.draw()
   -- VARIABLE DE DEBUG
   love.graphics.setColor(1, 1, 1)
   love.graphics.print(math.floor(fps) .. " FPS",10,10)
-  love.graphics.print(math.floor(tempsPasse) .. "s",10,25)
+  love.graphics.print(math.floor(time) .. "s",10,25)
 
-  love.graphics.print("ORIENTATION JOUEUR : " .. math.floor(player.o*180/math.pi) .. "°",10,55)
+  love.graphics.print("ORIENTATION JOUEUR : " .. math.floor(player.orientation*180/math.pi) .. "°",10,55)
   love.graphics.print("VITESSE JOUEUR : " .. player.vector.norme .. " px/s",10,70)
 
   -- CADRILLAGE
@@ -132,40 +43,6 @@ function love.draw()
     love.graphics.line(0, grad, love.graphics.getWidth(), grad)
   end
 
-  -- TRAJECTOIRE PASEE DU JOUEUR
-  love.graphics.setColor(0, 0, 1)
-  for i, v in ipairs(player.trajectory.points) do
-    if i ~= 1 then
-      local last = player.trajectory.points[i-1]
-      local current = player.trajectory.points[i]
-      love.graphics.line(last.playerX, last.playerY, current.playerX, current.playerY)
-    end
-  end
-
-  -- TRAJECTOIRE PREDITE DU JOUEUR
-  love.graphics.setColor(1, 1, 1)
-  for i, v in ipairs(player.trajectory.prediction) do
-    if i ~= 1 then
-      local last = player.trajectory.prediction[i-1]
-      local current = player.trajectory.prediction[i]
-      --love.graphics.line(last.playerX, last.playerY, current.playerX, current.playerY)
-    end
-  end
-
-  -- PROGRADE
-  love.graphics.setColor(1, 0.8, 0)
-  love.graphics.line(player.x, player.y, player.x+player.vector.normeX, player.y-player.vector.normeY)
-
-  -- RETROGRADE
-  love.graphics.setColor(0, 1, 0.5)
-  love.graphics.line(player.x, player.y, player.x-player.vector.normeX, player.y+player.vector.normeY)
-
-  -- LE JOUEUR
-  love.graphics.setColor(1, 1, 1)
-  love.graphics.circle("fill", player.x, player.y, player.radius, 32)
-
-  -- ORIENTATION DU JOUEUR
-  love.graphics.setColor(0, 0, 0)
-  love.graphics.line(player.x, player.y, player.oX, player.oY)
+  Player.draw()
 
 end
