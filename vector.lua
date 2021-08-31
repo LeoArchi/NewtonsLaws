@@ -16,6 +16,7 @@ Vector = {
 
     local vector = {}
     vector.norme = speed
+    vector.angle = angle
     vector.normeX = _getVx(speed, angle)
     vector.normeY = _getVy(speed, angle)
     return vector

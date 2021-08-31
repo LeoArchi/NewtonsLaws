@@ -6,7 +6,7 @@ Trajectory = {
 predict = function(x, y, vector, nbPoints)
 
   local prediction = {}
-  local virtualDt = 0.3
+  local virtualDt = 1/60
 
   local virtualX = x
   local virtualY = y

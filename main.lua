@@ -2,6 +2,8 @@ Vector  = require "vector"
 Player  = require "player"
 Astre   = require "astre"
 
+demoOrbite = true
+
 function love.load()
 
   time = 0
@@ -12,8 +14,15 @@ function love.load()
   default = love.graphics.newFont(12)
   forty = love.graphics.newFont(40)
 
-  vector = Vector.new(0,0)
-  player = Player.new(50, 200, 20, vector)
+  if demoOrbite then
+    -- VALEURS POSSIBLE POUR UNE DEMO DES ORBITES : 185 : orbite circulaire, 150 elliptique
+    vector = Vector.new(150,0)
+    player = Player.new(love.graphics.getWidth()/2, 200, 20, vector)
+  else
+    vector = Vector.new(0,0)
+    player = Player.new(50, 200, 20, vector)
+  end
+
 
   soleil = Astre.new("Soleil", 75, 3000000000000000, love.graphics.getWidth()/2, love.graphics.getHeight()/2)
 

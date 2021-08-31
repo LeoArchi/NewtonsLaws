@@ -31,7 +31,7 @@ end,
 
 update = function(dt)
   -- Prédiction de la trajectoire du joueur
-  player.trajectory.future = Trajectory.predict(player.x, player.y, player.vector, 50)
+  player.trajectory.future = Trajectory.predict(player.x, player.y, player.vector, 450)
 
   player.trajectory.tempsEcoule = player.trajectory.tempsEcoule +dt
 
@@ -73,6 +73,13 @@ update = function(dt)
     -- TODO : Si lorsque l'on applique la gravitation et que l'on dépasse la colition de la planète, alors recalculer les composantes de sorte que l'on reste à la surface de l'astre
   end
 
+  -- Si en ajoutant mon vecteur vitesse je rentre en collision avec la planète, alors appliquer la force de réaction du sol
+  --local distance = math.sqrt( math.pow(soleil.y-player.vector.normeY*dt,2) + math.pow(soleil.x-player.x + player.vector.normeX*dt,2))
+    --if distance <= player.radius + soleil.radius then
+      --player.vector = Vector.add(player.vector, Vector.new(-gravityVector.norme, gravityVector.angle+180))
+    --end
+
+
   -- Calculer le déplacement du joueur
   player.x = player.x + player.vector.normeX*dt
   player.y = player.y - player.vector.normeY*dt
@@ -91,7 +98,7 @@ draw = function()
     if i ~= 1 then
       local last = player.trajectory.passee[i-1]
       local current = player.trajectory.passee[i]
-      love.graphics.line(last.x, last.y, current.x, current.y)
+      --love.graphics.line(last.x, last.y, current.x, current.y)
     end
   end
 
@@ -101,7 +108,7 @@ draw = function()
     if i ~= 1 then
       local last = player.trajectory.future[i-1]
       local current = player.trajectory.future[i]
-      --love.graphics.line(last.x, last.y, current.x, current.y)
+      love.graphics.line(last.x, last.y, current.x, current.y)
     end
   end
 

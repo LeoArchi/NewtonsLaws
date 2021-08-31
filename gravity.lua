@@ -16,7 +16,9 @@ Gravity = {
         angle = math.pi*2 + angle
       end
 
-      return Vector.new(-Gravity.getValue(astre.mass, distance),angle)
+      local gravityVector = Vector.new(-Gravity.getValue(astre.mass, distance),angle)
+
+      return gravityVector
     else
       return Vector.new(0,0)
     end
